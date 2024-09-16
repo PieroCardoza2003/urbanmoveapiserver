@@ -10,7 +10,7 @@ class Usuario(Base):
     id_usuario = Column(UUID(as_uuid=True), primary_key=True, index=True, default=get_uuid)
     nombres_usuario = Column(String(80), nullable=False)
     apellidos_usuario = Column(String(80), nullable=True)
-    fecha_nacimiento_usuario = Column(Date, nullable=True)
+    fecha_nacimiento_usuario = Column(String(15), nullable=True)
     foto_usuario = Column(String, nullable=True)
     email_usuario = Column(String(160), nullable=False, unique=True, index=True)
     password_usuario = Column(String, nullable=False)

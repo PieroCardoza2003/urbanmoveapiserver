@@ -18,6 +18,6 @@ class UsuarioResponse(BaseModel):
 class UsuarioCreate(BaseModel):
     nombres_usuario: str
     apellidos_usuario: Optional[str] = None
-    fecha_nacimiento_usuario: Optional[date] = None
+    fecha_nacimiento_usuario: Optional[str] = None
     email_usuario: str
     password_usuario: str
