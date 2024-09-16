@@ -48,7 +48,7 @@ def user_create(db: Session, user: UsuarioCreate):
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
-            return db_user
+            return { "details": "success" }
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail="Internal server error")

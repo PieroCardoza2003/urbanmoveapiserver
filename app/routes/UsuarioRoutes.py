@@ -9,7 +9,7 @@ from controller.UsuarioController import user_get_all, user_get_one, user_create
 
 router = APIRouter(prefix="/user")
 
-@router.get("/list/all", response_model=List[UsuarioResponse])
+@router.get("/list/all")
 def get_all_users(db: Session = Depends(get_db)):
     return user_get_all(db=db)
 
