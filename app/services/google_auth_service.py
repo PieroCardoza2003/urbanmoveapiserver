@@ -1,0 +1,19 @@
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from config import GOOGLE_ID_CLIENT
+
+def verify_token(token):
+    try:
+        id_info = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_ID_CLIENT)
+
+        name_user = id_info['given_name']
+        email_user = id_info['email']
+
+        if not name_user or not email_user:
+            return None
+        return (name_user, email_user)
+    
+    except Exception:
+        return None
+
+#token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjI4YTQyMWNhZmJlM2RkODg5MjcxZGY5MDBmNGJiZjE2ZGI1YzI0ZDQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIxMDcxOTU2MDAxMjE3LWVmbjZmcmI4YXQ5dTFpbTdqMmllbjFvcjFwbzZvZWtqLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTA3MTk1NjAwMTIxNy1kajFycWZ1OHIyaDFzdWpyYmJ1bjEwdWRrdHM1YzFkai5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjExMzM3NTUyMzc4NTk3NDk1OTUwNSIsImVtYWlsIjoicGllcm9jYXJkb3phemFwYXRhQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiUGllcm8gRnJvaWxhbiBDYXJkb3phIFphcGF0YSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NKU2R0ZURBcUlmRFpRczFsYmV4OXJMa2R5N0FoTjNXdEtzd0c3WkRPWUVQUE51d1E9czk2LWMiLCJnaXZlbl9uYW1lIjoiUGllcm8gRnJvaWxhbiIsImZhbWlseV9uYW1lIjoiQ2FyZG96YSBaYXBhdGEiLCJpYXQiOjE3MjgxMTc0NDEsImV4cCI6MTcyODEyMTA0MX0.U9XPbJZp61VVAqZ-e_RDfTst2G8Q0bmImeZxzbtQvgcB_3uhRTd-1oDcXqI9Xr5laN794Ujbp93o_qz-aS9td6xUukpEtz3lqZoFmCWnXTNz-fQnK86aoKjEHWnHmv8iZVU2bsh4_aVecQ9uRMwDN8NziRIxAFRQKaMtZC_NY89zuOFuArS4DyLeTx51ZOQsm6OUMwNZeg_Q2sAGqMmdCtLPwTpVyyCeTAnyMSHAxmQyOHeHQ9KDk2EBlM3gRhDfBGluls3Gu8jAhdDk-4pZLdMifQSOrHHRKW9Se8piwvx0rz7FISmVPQA9oUhaTXMUiKRczzhA7nxgutqVUcqbxw"

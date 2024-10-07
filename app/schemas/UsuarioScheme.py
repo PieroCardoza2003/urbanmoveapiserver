@@ -5,19 +5,45 @@ from uuid import UUID
 
 class UsuarioResponse(BaseModel):
     id_usuario: UUID
-    nombres_usuario: str
-    apellidos_usuario: Optional[str] = None
-    fecha_nacimiento_usuario: Optional[date] = None
-    foto_usuario: Optional[str] = None
-    email_usuario: str
-    password_usuario: str
+    nombres: str
+    apellidos: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+    email: str
+    password: str
+    foto_perfil: Optional[str] = None
+    ciudad: Optional[str] = None
+    rol_actual: str
+    tipo_autenticacion: str
     fecha_registro_usuario: datetime
     activo: str
 
 
 class UsuarioCreate(BaseModel):
-    nombres_usuario: str
-    apellidos_usuario: Optional[str] = None
-    fecha_nacimiento_usuario: Optional[str] = None
-    email_usuario: str
-    password_usuario: str
+    nombres: str
+    apellidos: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+    email: str
+    password: str
+    
+
+class UsuarioLogin(BaseModel):
+    email: str
+    password: str
+
+class GoogleLogin(BaseModel):
+    token: str
+
+class UsuarioId(BaseModel):
+    id_usuario: UUID
+
+class UsuarioFind(BaseModel):
+    email: str
+    type: str
+
+class UsuarioPassword(BaseModel):
+    email: str
+    password: str
+
+class UsuarioCode(BaseModel):
+    email: str
+    code: str

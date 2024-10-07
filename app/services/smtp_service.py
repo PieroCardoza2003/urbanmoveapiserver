@@ -2,8 +2,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from config import SERVICE_EMAIL, SERVICE_EMAIL_SECRET
+from utils.templete_utils import templeate_email
+from services.activate_user_service import set_activate_user
 
-def send_email(subject: str, body: str, to_email: str) -> bool:
+
+def send_email(subject: str, body: str, to_email: str):
     smtp_email = SERVICE_EMAIL
     smtp_secret = SERVICE_EMAIL_SECRET
     
@@ -18,13 +21,13 @@ def send_email(subject: str, body: str, to_email: str) -> bool:
             server.starttls()
             server.login(smtp_email, smtp_secret)
             server.sendmail(smtp_email, to_email, message.as_string())
-        return True
+        return
     except Exception:
-        return False
+        return
 
 
-#send_email("Activacion de su cuenta", "<html><body><p>Introduzaca el codigo 12345 para activar su cuenta.</p></body></html>", "pierocardozazapata@gmail.com")
-
-
-
-
+def send_verifycode(asunto: str, email: str, code: str):
+    # se envia un email con el codigo de verificacion
+    send_email(subject=asunto, body=templeate_email(code), to_email=email)
+    # se añade a la lista en espera de verificacion
+    set_activate_user(email=email, code=code)
