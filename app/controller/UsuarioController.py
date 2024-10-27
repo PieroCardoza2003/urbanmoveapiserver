@@ -1,14 +1,4 @@
 from models.Usuario import Usuario
-
-
-#from models.UsuarioSesion import UsuarioSesion
-from models.Marca import Marca
-from models.Modelo import Modelo
-from models.Color import Color
-#luego estas importaciones de modelo se eliminaran
-
-
-
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import HTTPException
