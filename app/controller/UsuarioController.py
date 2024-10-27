@@ -1,10 +1,11 @@
 from models.Usuario import Usuario
 
-#luego eliminar
+
 #from models.UsuarioSesion import UsuarioSesion
 from models.Marca import Marca
 from models.Modelo import Modelo
 from models.Color import Color
+#luego estas importaciones de modelo se eliminaran
 
 
 
