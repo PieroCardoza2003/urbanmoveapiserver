@@ -23,3 +23,11 @@ def get_refresh_token(id: str):
         "iat": datetime_now()
     }
     return create_jwt(payload=payload, secret=SECRET_RT)
+
+
+def verify_refresh_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_RT, algorithms=["HS256"])
+        return payload
+    except:
+        return None

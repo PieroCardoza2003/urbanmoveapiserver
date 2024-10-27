@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 
-class UsuarioResponse(BaseModel):
+class UsuarioResponsex(BaseModel):
     id_usuario: UUID
     nombres: str
     apellidos: Optional[str] = None
@@ -23,7 +23,7 @@ class UsuarioCreate(BaseModel):
     apellidos: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
     email: str
-    password: str
+    password: Optional[str] = None
     
 
 class UsuarioLogin(BaseModel):
@@ -47,3 +47,12 @@ class UsuarioPassword(BaseModel):
 class UsuarioCode(BaseModel):
     email: str
     code: str
+
+class UsuarioToken(BaseModel):
+    token: str
+
+class UsuarioResponse(BaseModel):
+    id_usuario: UUID
+    nombres: str
+    apellidos: Optional[str] = None
+    foto_perfil: Optional[str] = None

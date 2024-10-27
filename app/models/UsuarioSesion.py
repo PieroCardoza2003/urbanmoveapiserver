@@ -9,7 +9,7 @@ class UsuarioSesion(Base):
 
     id_sesion = Column(UUID(as_uuid=True), primary_key=True, index=True, default=get_uuid)
     id_usuario = Column(UUID(as_uuid=True), ForeignKey('usuario.id_usuario'), nullable=False, unique=True)
-    ip_usuario = Column(String(30), nullable=True)
+    ip_usuario = Column(String(50), nullable=True)
     token = Column(String, nullable=False)
     fecha_creacion = Column(DateTime, nullable=False)
     fecha_expiracion = Column(DateTime, nullable=False)

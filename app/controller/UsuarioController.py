@@ -1,21 +1,64 @@
 from models.Usuario import Usuario
-from models.UsuarioSesion import UsuarioSesion
+
+#luego eliminar
+#from models.UsuarioSesion import UsuarioSesion
+from models.Marca import Marca
+from models.Modelo import Modelo
+from models.Color import Color
+
+
+
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-from utils.uuid_utils import verify_uuid
+from utils.uuid_utils import verify_uuid, get_uuid
+from utils.datetime_utils import datetime_now
 from utils.email_utils import verify_email
 from utils.bcrypt_utils import encode_password, verify_password
 from utils.string_utils import is_blank
 from utils.jwt_utils import get_access_token, get_refresh_token
 from services.google_auth_service import verify_token
 from services.smtp_service import send_verifycode
+from utils.jwt_utils import verify_refresh_token
 from services.activate_user_service import generate_random_code, prints_users, validate_code
-from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioId, UsuarioFind, UsuarioCode, UsuarioPassword
+from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioId, UsuarioFind, UsuarioCode, UsuarioPassword, UsuarioToken, UsuarioResponse
 
 
 def user_get_all(db: Session):
     return db.query(Usuario).all()
+
+
+def accesstoken_renew(db: Session, token: UsuarioToken):
+
+    payload = verify_refresh_token(token=token.token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    id = payload.get("sub")
+    
+    usuario = db.query(Usuario).filter_by(id_usuario=id).first()
+    
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return JSONResponse(content={ 
+            "access_token": get_access_token(id=id)
+        }, status_code=200)
+
+
+def session_verify(db: Session, id: str):
+    usuario = db.query(Usuario).filter_by(id_usuario=id).first()
+
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return JSONResponse(content={ 
+            "id_usuario": f"{usuario.id_usuario}",
+            "rol_actual": usuario.rol_actual
+        }, status_code=200)
+
 
 
 def user_get_one(db: Session, id: str):
@@ -27,7 +70,13 @@ def user_get_one(db: Session, id: str):
 
     if usuario is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return usuario
+    
+    return UsuarioResponse(
+        id_usuario=usuario.id_usuario,
+        nombres=usuario.nombres,
+        apellidos=usuario.apellidos,
+        foto_perfil=usuario.foto_perfil
+    )
 
 
 def password_new(db: Session, user: UsuarioPassword):
@@ -82,6 +131,7 @@ def code_verify(user: UsuarioCode):
     return JSONResponse(content={ "details": "OK" }, status_code=200)
 
 
+
 def google_login(db: Session, user: GoogleLogin):
 
     token = user.token
@@ -94,31 +144,27 @@ def google_login(db: Session, user: GoogleLogin):
     if not data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    existing_user = db.query(Usuario).filter_by(email=data[1], tipo_autenticacion="GOOGLE").first()
+    existing_user = db.query(Usuario).filter_by(email=data[1]).first()
+
+    if existing_user and existing_user.tipo_autenticacion != "GOOGLE":
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not existing_user:
-
-        db_user = Usuario(
+        
+        user = UsuarioCreate(
             nombres=data[0],
             apellidos=None,
             fecha_nacimiento=None,
             email=data[1],
-            password=None,
-            foto_perfil=None,
-            ciudad=None,
-            rol_actual="PASAJERO",
-            tipo_autenticacion="GOOGLE"
+            password=None
         )
 
-        try:
-            db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
-            existing_user = UsuarioId(id_usuario=db_user.id_usuario)
-        except Exception as e:
-            db.rollback()
-            print(e)
+        result = insert_user(db=db, user=user, authtype="GOOGLE")
+        
+        if result == 1 or not result:
             raise HTTPException(status_code=500, detail="Internal server error")
+        
+        existing_user = UsuarioId(id_usuario=result)
 
     return JSONResponse(content={
         "access_token": get_access_token(existing_user.id_usuario),
@@ -126,14 +172,10 @@ def google_login(db: Session, user: GoogleLogin):
     }, status_code=200)
 
 
-    
-
-
 def user_login(db: Session, user: UsuarioLogin):
 
     user_email = user.email.strip()
     user_password = user.password.strip()
-    
 
     if not verify_email(user_email) or is_blank(user_password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
@@ -156,42 +198,73 @@ def user_login(db: Session, user: UsuarioLogin):
         }, status_code=200)
 
 
+def insert_user(db: Session, user: UsuarioCreate, authtype: str):
+    try:
+        usuarioId = get_uuid()
+
+        result = db.execute(text("""
+            SELECT registra_usuario_pasajero(
+                :id_usuario,
+                :nombres,
+                :apellidos,
+                :fecha_nacimiento,
+                :email,
+                :password,
+                :foto_perfil,
+                :ciudad,
+                :rol_actual,
+                :tipo_autenticacion,
+                :fecha_registro,
+                :id_pasajero
+            )
+        """), {
+                "id_usuario": usuarioId,
+                "nombres": user.nombres,
+                "apellidos": user.apellidos,
+                "fecha_nacimiento": user.fecha_nacimiento,
+                "email": user.email,
+                "password":  encode_password(user.password) if user.password else None,
+                "foto_perfil": None,
+                "ciudad": None,
+                "rol_actual": "PASAJERO",
+                "tipo_autenticacion": authtype,
+                "fecha_registro": str(datetime_now()),
+                "id_pasajero": get_uuid()
+            }
+        ).scalar() 
+
+        db.commit()
+
+        if result == 1 or not result:
+            return 1
+
+        return usuarioId 
+    except Exception as e:
+        print(e)
+        return 1
 
 
 def user_create(db: Session, user: UsuarioCreate):
 
-        if not verify_email(user.email):
-            raise HTTPException(status_code=400, detail="Invalid email")
-        
+    if not verify_email(user.email):
+        raise HTTPException(status_code=400, detail="Invalid email")
+    
+    existing_user = db.query(Usuario).filter_by(email=user.email).first()
 
-        existing_user = db.query(Usuario).filter_by(email=user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User already exists")
 
-        if existing_user:
-            raise HTTPException(status_code=400, detail="User already exists")
-        
+    try:
+        result = insert_user(db=db, user=user, authtype="LOCAL")
 
-        db_user = Usuario(
-                nombres=user.nombres,
-                apellidos=user.apellidos,
-                fecha_nacimiento=user.fecha_nacimiento,
-                email=user.email,
-                password=encode_password(user.password),
-                foto_perfil=None,
-                ciudad=None,
-                rol_actual="PASAJERO",
-                tipo_autenticacion="LOCAL"
-            )
-
-        try:
-            db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
-            return JSONResponse(content={
-                    "details": "success"
-                }, status_code=200)
-        except Exception as e:
-            db.rollback()
+        if result == 1 or not result:
             raise HTTPException(status_code=500, detail="Internal server error")
+
+        return JSONResponse(content= {
+                "details": "success"
+            }, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
     

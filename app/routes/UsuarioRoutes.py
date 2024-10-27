@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
-
+from middlewares.auth import verify_access_token
+from fastapi import HTTPException
 from database.db import get_db
-from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioFind, UsuarioCode, UsuarioPassword
-from controller.UsuarioController import user_get_all, user_get_one, user_create, user_login, google_login, account_verify, code_verify, password_new
+from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioFind, UsuarioCode, UsuarioPassword, UsuarioToken
+from controller.UsuarioController import user_get_all, user_get_one, user_create, user_login, google_login, account_verify, code_verify, password_new, session_verify, accesstoken_renew
 
 
 router = APIRouter(prefix="/user")
@@ -14,9 +15,28 @@ def get_all_users(db: Session = Depends(get_db)):
     return user_get_all(db=db)
 
 
-@router.get("/get/{id}")
-def get_one_user(id, db: Session = Depends(get_db)):
+#@router.get("/get/{id}", dependencies=[Depends(verify_access_token)])
+#def get_one_user(id, db: Session = Depends(get_db)):
+#    return user_get_one(db=db, id=id)
+
+@router.get("/get-user")
+def get_one_user(db: Session = Depends(get_db), payload: dict = Depends(verify_access_token)):
+    id = payload.get("sub")
+    if not id:
+        raise HTTPException(status_code=400, detail="Token error")
     return user_get_one(db=db, id=id)
+
+
+@router.get("/verify-session")
+def verify_session(db: Session = Depends(get_db), payload: dict = Depends(verify_access_token)):
+    id = payload.get("sub")
+    if not id:
+        raise HTTPException(status_code=400, detail="Token error")
+    return session_verify(db=db, id=id)
+
+@router.post("/access-token")
+def renew_accesstoken(token: UsuarioToken, db: Session = Depends(get_db)):
+    return accesstoken_renew(db=db, token=token)
 
 
 @router.post("/register")
