@@ -13,3 +13,6 @@ def marca_vehiculo_get_all(db: Session):
 
 def model_vehicle_get_all(db: Session, id: int):
     return db.query(Modelo).filter_by(id_marca=id).order_by(Modelo.modelo).all()
+
+def color_vehicle_get_all(db: Session):
+    return db.query(Color).order_by(Color.color).all()

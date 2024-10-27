@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from fastapi import HTTPException
 from database.db import get_db
-from controller.VehiculoController import marca_vehiculo_get_all, model_vehicle_get_all
+from controller.VehiculoController import marca_vehiculo_get_all, model_vehicle_get_all, color_vehicle_get_all
 
 
 router = APIRouter(prefix="/vehicle")
@@ -13,6 +13,10 @@ router = APIRouter(prefix="/vehicle")
 def get_all_marca_vehiculo(db: Session = Depends(get_db)):
     return marca_vehiculo_get_all(db=db)
 
-@router.get("models/get/{id}")
+@router.get("/models/get/{id}")
 def get_all_modelo_vehiculo(id, db: Session = Depends(get_db)):
     return model_vehicle_get_all(db=db, id=id)
+
+@router.get("/colors")
+def get_all_color_vehiculo(db: Session = Depends(get_db)):
+    return color_vehicle_get_all(db=db)
