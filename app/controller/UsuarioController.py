@@ -1,4 +1,7 @@
 from models.Usuario import Usuario
+
+from models.Pasajero import Pasajero
+
 from models.UsuarioSesion import UsuarioSesion
 from sqlalchemy.orm import Session
 from sqlalchemy import text
