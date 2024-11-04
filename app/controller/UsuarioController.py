@@ -1,4 +1,5 @@
 from models.Usuario import Usuario
+from models.UsuarioSesion import UsuarioSesion
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import HTTPException
@@ -21,7 +22,6 @@ def user_get_all(db: Session):
 
 
 def accesstoken_renew(db: Session, token: UsuarioToken):
-
     payload = verify_refresh_token(token=token.token)
 
     if not payload:
@@ -31,11 +31,18 @@ def accesstoken_renew(db: Session, token: UsuarioToken):
     
     usuario = db.query(Usuario).filter_by(id_usuario=id).first()
     
-    if usuario is None:
+    if not usuario:
         raise HTTPException(status_code=404, detail="User not found")
     
+    existing_sesion = db.query(UsuarioSesion).filter_by(id_usuario=usuario.id_usuario, token=token.token).first()
+
+    if not existing_sesion:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    access_token_user = get_access_token(id=id)
+
     return JSONResponse(content={ 
-            "access_token": get_access_token(id=id)
+            "token": access_token_user[1]
         }, status_code=200)
 
 
@@ -123,7 +130,7 @@ def code_verify(user: UsuarioCode):
 
 
 
-def google_login(db: Session, user: GoogleLogin):
+def google_login(db: Session, user: GoogleLogin, client_ip: str):
 
     token = user.token
 
@@ -152,18 +159,46 @@ def google_login(db: Session, user: GoogleLogin):
 
         result = insert_user(db=db, user=user, authtype="GOOGLE")
         
-        if result == 1 or not result:
+        if result == 1:
             raise HTTPException(status_code=500, detail="Internal server error")
         
         existing_user = UsuarioId(id_usuario=result)
 
+    # VERIFICAR SI EXISTE UNA SESSION Y REEMPLAZARLA
+    existing_sesion = db.query(UsuarioSesion).filter_by(id_usuario=existing_user.id_usuario).first()
+
+    access_token_user = get_access_token(existing_user.id_usuario)
+    refresh_token_user = get_refresh_token(existing_user.id_usuario)
+
+    if not existing_sesion:
+        new_session = UsuarioSesion(
+            id_usuario = existing_user.id_usuario,
+            ip_usuario = client_ip,
+            token = refresh_token_user[1],
+            fecha_creacion = refresh_token_user[0].get("iat"),
+            fecha_expiracion = refresh_token_user[0].get("exp")
+        )
+
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+
+    else:
+        existing_sesion.id_sesion = get_uuid()
+        existing_sesion.ip_usuario = client_ip
+        existing_sesion.token = refresh_token_user[1]
+        existing_sesion.fecha_creacion = refresh_token_user[0].get("iat")
+        existing_sesion.fecha_expiracion = refresh_token_user[0].get("exp")
+        db.commit()
+
+
     return JSONResponse(content={
-        "access_token": get_access_token(existing_user.id_usuario),
-        "refresh_token": get_refresh_token(existing_user.id_usuario)
-    }, status_code=200)
+            "access_token": access_token_user[1],
+            "refresh_token": refresh_token_user[1]
+        }, status_code=200)
 
 
-def user_login(db: Session, user: UsuarioLogin):
+def user_login(db: Session, user: UsuarioLogin, client_ip: str):
 
     user_email = user.email.strip()
     user_password = user.password.strip()
@@ -177,15 +212,35 @@ def user_login(db: Session, user: UsuarioLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # VERIFICAR SI EXISTE UNA SESSION Y REEMPLAZARLA
-    #existing_sesion = db.query(UsuarioSesion).filter_by(id_usuario=existing_user.id_usuario).first()
+    existing_sesion = db.query(UsuarioSesion).filter_by(id_usuario=existing_user.id_usuario).first()
 
-    #if existing_sesion:
+    access_token_user = get_access_token(existing_user.id_usuario)
+    refresh_token_user = get_refresh_token(existing_user.id_usuario)
 
+    if not existing_sesion:
+        new_session = UsuarioSesion(
+            id_usuario = existing_user.id_usuario,
+            ip_usuario = client_ip,
+            token = refresh_token_user[1],
+            fecha_creacion = refresh_token_user[0].get("iat"),
+            fecha_expiracion = refresh_token_user[0].get("exp")
+        )
 
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+
+    else:
+        existing_sesion.id_sesion = get_uuid()
+        existing_sesion.ip_usuario = client_ip
+        existing_sesion.token = refresh_token_user[1]
+        existing_sesion.fecha_creacion = refresh_token_user[0].get("iat")
+        existing_sesion.fecha_expiracion = refresh_token_user[0].get("exp")
+        db.commit()
     
     return JSONResponse(content={
-            "access_token": get_access_token(existing_user.id_usuario),
-            "refresh_token": get_refresh_token(existing_user.id_usuario)
+            "access_token": access_token_user[1],
+            "refresh_token": refresh_token_user[1]
         }, status_code=200)
 
 
@@ -226,9 +281,9 @@ def insert_user(db: Session, user: UsuarioCreate, authtype: str):
 
         db.commit()
 
-        if result == 1 or not result:
+        if result != 0:
             return 1
-
+        
         return usuarioId 
     except Exception as e:
         print(e)
@@ -236,7 +291,7 @@ def insert_user(db: Session, user: UsuarioCreate, authtype: str):
 
 
 def user_create(db: Session, user: UsuarioCreate):
-
+    
     if not verify_email(user.email):
         raise HTTPException(status_code=400, detail="Invalid email")
     
@@ -247,8 +302,8 @@ def user_create(db: Session, user: UsuarioCreate):
 
     try:
         result = insert_user(db=db, user=user, authtype="LOCAL")
-
-        if result == 1 or not result:
+        
+        if result == 1:
             raise HTTPException(status_code=500, detail="Internal server error")
 
         return JSONResponse(content= {

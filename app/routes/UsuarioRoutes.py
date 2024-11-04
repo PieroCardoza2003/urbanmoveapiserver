@@ -27,12 +27,14 @@ def get_one_user(db: Session = Depends(get_db), payload: dict = Depends(verify_a
     return user_get_one(db=db, id=id)
 
 
+
 @router.get("/verify-session")
 def verify_session(db: Session = Depends(get_db), payload: dict = Depends(verify_access_token)):
     id = payload.get("sub")
     if not id:
         raise HTTPException(status_code=400, detail="Token error")
     return session_verify(db=db, id=id)
+
 
 @router.post("/access-token")
 def renew_accesstoken(token: UsuarioToken, db: Session = Depends(get_db)):
@@ -60,10 +62,26 @@ def new_password(user: UsuarioPassword, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-def login_user(user: UsuarioLogin, db: Session = Depends(get_db)):
-    return user_login(db=db, user=user)
+def login_user(user: UsuarioLogin, db: Session = Depends(get_db), request: Request = None):
+    
+    client_ip = request.headers.get("X-Forwarded-For")
+
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    else:
+        client_ip = request.client.host
+    
+    return user_login(db=db, user=user, client_ip=client_ip)
 
 
 @router.post("/login-google")
-def login_google(user: GoogleLogin, db: Session = Depends(get_db)):
-    return google_login(db=db, user=user)
+def login_google(user: GoogleLogin, db: Session = Depends(get_db), request: Request = None):
+
+    client_ip = request.headers.get("X-Forwarded-For")
+
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    else:
+        client_ip = request.client.host
+
+    return google_login(db=db, user=user, client_ip=client_ip)

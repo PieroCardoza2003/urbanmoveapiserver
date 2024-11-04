@@ -7,13 +7,14 @@ def create_jwt(payload, secret):
     return jwt.encode(payload, secret, algorithm="HS256")
 
 
-def get_access_token(id):
+def get_access_token(id: str):
     payload = {
         "sub": str(id),
         "exp": datetime_limit(15), # 15m
         "iat": datetime_now()
     }
-    return create_jwt(payload=payload, secret=SECRET_AT)
+    token = create_jwt(payload=payload, secret=SECRET_AT)
+    return (payload, token)
 
 
 def get_refresh_token(id: str):
@@ -22,7 +23,8 @@ def get_refresh_token(id: str):
         "exp": datetime_limit(30 * 24 * 60), # 30d
         "iat": datetime_now()
     }
-    return create_jwt(payload=payload, secret=SECRET_RT)
+    token = create_jwt(payload=payload, secret=SECRET_RT)
+    return (payload, token)
 
 
 def verify_refresh_token(token: str):
