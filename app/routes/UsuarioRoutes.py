@@ -4,7 +4,7 @@ from middlewares.auth import verify_access_token
 from fastapi import HTTPException
 from database.db import get_db
 from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioFind, UsuarioCode, UsuarioPassword, UsuarioToken
-from controller.UsuarioController import user_get_all, user_get_one, user_create, user_login, google_login, account_verify, code_verify, password_new, session_verify, accesstoken_renew
+from controller.UsuarioController import user_get_all, user_get_one, user_create, user_login, google_login, account_verify, code_verify, password_new, session_verify, accesstoken_renew, driver_get_one
 
 
 router = APIRouter(prefix="/user")
@@ -25,6 +25,14 @@ def get_one_user(db: Session = Depends(get_db), payload: dict = Depends(verify_a
     if not id:
         raise HTTPException(status_code=400, detail="Token error")
     return user_get_one(db=db, id=id)
+
+
+@router.get("/verify-driver")
+def get_one_driver(db: Session = Depends(get_db), payload: dict = Depends(verify_access_token)):
+    id = payload.get("sub")
+    if not id:
+        raise HTTPException(status_code=400, detail="Token error")
+    return driver_get_one(db=db, id=id)
 
 
 

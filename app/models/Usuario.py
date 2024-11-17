@@ -1,9 +1,8 @@
-from sqlalchemy import Column, String, Date, Boolean, DateTime
+from sqlalchemy import Column, String, Date, DateTime
 from database.db import Base, engine
 from sqlalchemy.dialects.postgresql import UUID
 from utils.datetime_utils import datetime_now
 from utils.uuid_utils import get_uuid
-from sqlalchemy.orm import relationship
 
 class Usuario(Base):
     __tablename__ = "usuario"

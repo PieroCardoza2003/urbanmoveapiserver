@@ -56,3 +56,19 @@ class UsuarioResponse(BaseModel):
     nombres: str
     apellidos: Optional[str] = None
     foto_perfil: Optional[str] = None
+
+class UsuarioConductorResponse(BaseModel):
+    id_usuario: UUID
+    nombres: str
+    apellidos: Optional[str] = None
+    foto_perfil: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+    id_conductor: Optional[UUID] = None
+    tipo_conductor: Optional[str] = None
+
+
+class ConductorPrivado(BaseModel):
+    id_usuario: UUID
+    nombres: str
+    apellidos: Optional[str] = None
+    foto_perfil: Optional[str] = None

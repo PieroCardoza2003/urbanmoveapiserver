@@ -1,7 +1,5 @@
-from sqlalchemy import Column, String, Date, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, Integer
 from database.db import Base, engine
-from sqlalchemy.dialects.postgresql import UUID
-from utils.datetime_utils import get_datetime_now
 from utils.uuid_utils import get_uuid
 
 class Transporte(Base):

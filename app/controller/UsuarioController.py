@@ -1,6 +1,8 @@
 from models.Usuario import Usuario
 
-from models.Pasajero import Pasajero
+from models.Conductor import Conductor
+from models.ConductorEmpresa import ConductorEmpresa
+from models.ConductorPrivado import ConductorPrivado
 
 from models.UsuarioSesion import UsuarioSesion
 from sqlalchemy.orm import Session
@@ -17,7 +19,7 @@ from services.google_auth_service import verify_token
 from services.smtp_service import send_verifycode
 from utils.jwt_utils import verify_refresh_token
 from services.activate_user_service import generate_random_code, prints_users, validate_code
-from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioId, UsuarioFind, UsuarioCode, UsuarioPassword, UsuarioToken, UsuarioResponse
+from schemas.UsuarioScheme import UsuarioCreate, UsuarioLogin, GoogleLogin, UsuarioId, UsuarioFind, UsuarioCode, UsuarioPassword, UsuarioToken, UsuarioResponse, UsuarioConductorResponse
 
 
 def user_get_all(db: Session):
@@ -72,12 +74,65 @@ def user_get_one(db: Session, id: str):
     if usuario is None:
         raise HTTPException(status_code=404, detail="User not found")
     
-    return UsuarioResponse(
-        id_usuario=usuario.id_usuario,
-        nombres=usuario.nombres,
-        apellidos=usuario.apellidos,
-        foto_perfil=usuario.foto_perfil
-    )
+    try:
+        # cambiar a modo pasajero
+        usuario.rol_actual = "PASAJERO"
+        db.commit()  
+
+        return UsuarioResponse(
+            id_usuario=usuario.id_usuario,
+            nombres=usuario.nombres,
+            apellidos=usuario.apellidos,
+            foto_perfil=usuario.foto_perfil
+        )
+    except Exception as e:
+        db.rollback()
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+def driver_get_one(db: Session, id: str):
+
+    usuario = db.query(Usuario).filter_by(id_usuario=id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    conductor = db.query(Conductor).filter_by(id_usuario=usuario.id_usuario).first()
+    
+    id_conductor = None
+    tipo_conductor = None
+
+    if conductor:
+        if conductor.tipo_conductor == "EMPRESA":
+            isConductor = db.query(ConductorEmpresa).filter_by(id_conductor=conductor.id_conductor).first()
+            if isConductor:
+                id_conductor = isConductor.id_conductor
+                tipo_conductor = "EMPRESA"
+        
+        elif conductor.tipo_conductor == "PRIVADO":
+            isConductor = db.query(ConductorPrivado).filter_by(id_conductor=conductor.id_conductor).first()
+            if isConductor:
+                id_conductor = isConductor.id_conductor
+                tipo_conductor = "PRIVADO"
+  
+    try:
+        # cambiar a modo conductor
+        usuario.rol_actual = "CONDUCTOR"
+        db.commit()  
+        
+        return UsuarioConductorResponse(
+            id_usuario=usuario.id_usuario,
+            nombres=usuario.nombres,
+            apellidos=usuario.apellidos,
+            fecha_nacimiento=usuario.fecha_nacimiento,
+            foto_perfil=usuario.foto_perfil,
+            id_conductor=id_conductor,
+            tipo_conductor=tipo_conductor
+        )
+    except Exception as e:
+        db.rollback()
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def password_new(db: Session, user: UsuarioPassword):
@@ -197,7 +252,8 @@ def google_login(db: Session, user: GoogleLogin, client_ip: str):
 
     return JSONResponse(content={
             "access_token": access_token_user[1],
-            "refresh_token": refresh_token_user[1]
+            "refresh_token": refresh_token_user[1],
+            "role": existing_user.rol_actual
         }, status_code=200)
 
 
@@ -243,7 +299,8 @@ def user_login(db: Session, user: UsuarioLogin, client_ip: str):
     
     return JSONResponse(content={
             "access_token": access_token_user[1],
-            "refresh_token": refresh_token_user[1]
+            "refresh_token": refresh_token_user[1],
+            "role": existing_user.rol_actual
         }, status_code=200)
 
 
