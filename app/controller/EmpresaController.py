@@ -95,7 +95,7 @@ def empresa_login(db: Session, empresa: EmpresaLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     return JSONResponse(content={
-            "details": "loggued"
+            "id_empresa": existing_empresa.id_empresa
         }, status_code=200)
 
 

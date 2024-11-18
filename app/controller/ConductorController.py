@@ -17,7 +17,6 @@ from utils.string_utils import is_blank
 from utils.email_utils import verify_email
 from utils.bcrypt_utils import encode_password, verify_password
 from utils.randomcode_utils import generar_codigo_unico
-from utils.image_base64_utils import image_to_base64
 from services.github_repo_service import upload_image
 from schemas.ConductorScheme import ConductorEmpresaCreate
 
@@ -27,7 +26,7 @@ async def conductor_empresa_create(
     licencia_frontal: UploadFile,
     licencia_reverso: UploadFile,
     db: Session):
-        
+    
     usuario = db.query(Usuario).filter_by(id_usuario=conductor.id_usuario).first()
 
     if not usuario:
@@ -41,11 +40,13 @@ async def conductor_empresa_create(
     isConductorEmpresa = db.query(ConductorEmpresa).filter_by(codigo_empleado=conductor.codigo_empleado).first()
     
     if isConductorEmpresa:
-        raise HTTPException(status_code=400, detail="Employee code already exist")
+        raise HTTPException(status_code=400, detail="Employee code is already in use")
     
-    #isEmpleado = db.query(Empleado).filter_by(codigo_empleado=conductor.codigo_empleado,).first()
+    # verificar que el codigo proporcionado exista y no este asignado (null) para asignarse
+    isEmpleado = db.query(Empleado).filter_by(codigo_empleado=conductor.codigo_empleado, id_conductor_empresa=None).first()
     
-    
+    if not isEmpleado:
+        raise HTTPException(status_code=400, detail="Code not available")
 
 
     # Extraer las extensiones de las imagenes
@@ -84,7 +85,6 @@ async def conductor_empresa_create(
 
         if not fotoperfil or not licencia_frontal or not licencia_reverso:
             raise HTTPException(status_code=400, detail="No data provided")  
-        
 
 
 
