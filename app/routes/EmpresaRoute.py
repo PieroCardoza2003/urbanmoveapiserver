@@ -37,8 +37,8 @@ def get_all_empresa(db: Session = Depends(get_db)):
     return empresa_get_all(db=db)
 
 @router.get("/all-employe")
-def get_all_empleado(db: Session = Depends(get_db)):
-    return empleado_get_all(db=db)
+def get_all_empleado(empresaID: str, db: Session = Depends(get_db)):
+    return empleado_get_all(empresaID=empresaID, db=db)
 
 @router.post("/login")
 def login_empresa(empresa: EmpresaLogin, db: Session = Depends(get_db)):    

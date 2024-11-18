@@ -47,7 +47,7 @@ def empresa_get_all(db: Session):
     return db.query(Empresa).order_by(Empresa.razon_social).all()
 
 
-def empleado_get_all(db: Session):
+def empleado_get_all(empresaID: str, db: Session):
 
     query = """
         SELECT e.codigo_empleado, 
@@ -56,10 +56,11 @@ def empleado_get_all(db: Session):
         FROM empleado AS e
         LEFT JOIN conductor_empresa AS ce ON ce.id_conductor_empresa = e.id_conductor_empresa
         LEFT JOIN conductor AS c ON c.id_conductor = ce.id_conductor
-        LEFT JOIN usuario AS u ON u.id_usuario = c.id_usuario;
+        LEFT JOIN usuario AS u ON u.id_usuario = c.id_usuario
+        where e.id_empresa = :empresaID;
         """
     
-    result = db.execute(text(query)).fetchall()
+    result = db.execute(text(query), {'empresaID': empresaID}).fetchall()
     
     dict_data = [
         {
