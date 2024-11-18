@@ -49,6 +49,8 @@ def empresa_get_all(db: Session):
 
 def empleado_get_all(empresaID: str, db: Session):
 
+    
+
     query = """
         SELECT e.codigo_empleado, 
             CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) as conductor, 

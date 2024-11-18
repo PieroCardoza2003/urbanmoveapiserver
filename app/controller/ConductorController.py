@@ -1,6 +1,7 @@
-from fastapi import File, UploadFile
+from fastapi import UploadFile
 from typing import Optional
 from pathlib import Path
+from sqlalchemy import text
 
 from models.Conductor import Conductor
 from models.Usuario import Usuario
@@ -120,7 +121,7 @@ async def conductor_empresa_create(
             "details": "OK"
         }, status_code=200)
     
-    except Exception as e:
+    except  Exception as e:
         print(e)
         db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
