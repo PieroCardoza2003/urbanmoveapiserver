@@ -10,7 +10,7 @@ from utils.string_utils import is_blank
 from utils.email_utils import verify_email
 from utils.bcrypt_utils import encode_password, verify_password
 from utils.randomcode_utils import generar_codigo_unico
-from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate
+from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate, EmpleadoResponse
 
 
 def empresa_create(db: Session, empresa: EmpresaCreate):
@@ -48,7 +48,29 @@ def empresa_get_all(db: Session):
 
 
 def empleado_get_all(db: Session):
-    return db.query(Empleado).all()
+
+    query = """
+        SELECT e.codigo_empleado, 
+            CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) as conductor, 
+            e.fecha_registro 
+        FROM empleado AS e
+        LEFT JOIN conductor_empresa AS ce ON ce.id_conductor_empresa = e.id_conductor_empresa
+        LEFT JOIN conductor AS c ON c.id_conductor = ce.id_conductor
+        LEFT JOIN usuario AS u ON u.id_usuario = c.id_usuario;
+        """
+    
+    result = db.execute(text(query)).fetchall()
+    
+    dict_data = [
+        {
+            "codigo_empleado": item[0],
+            "conductor": item[1],
+            "fecha_registro": item[2].strftime('%Y-%m-%d %H:%M:%S')  # Convertir datetime a cadena
+        }
+        for item in result
+    ]
+
+    return dict_data
 
 
 def vehiculo_get_all(db: Session):

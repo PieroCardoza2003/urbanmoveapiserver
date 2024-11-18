@@ -124,4 +124,3 @@ async def conductor_empresa_create(
         print(e)
         db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
-

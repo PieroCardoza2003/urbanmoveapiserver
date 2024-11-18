@@ -15,6 +15,11 @@ class EmpresaCreate(BaseModel):
 class EmpleadoCreate(BaseModel):
     id_empresa: UUID
 
+class EmpleadoResponse(BaseModel):
+    codigo_empleado: str
+    conductor: Optional[str]
+    fecha_registro: Optional[datetime]
+
 class EmpresaLogin(BaseModel):
     email: str
     password: str
