@@ -37,6 +37,6 @@ async def create_conductor_empresa(
     return await conductor_empresa_create(
         conductor=conductor, 
         fotoperfil=fotoperfil,
-        licencia_frontal=licencia_frontal,
-        licencia_reverso=licencia_reverso,
+        licenciafrontal=licencia_frontal,
+        licenciareverso=licencia_reverso,
         db=db)
