@@ -48,11 +48,8 @@ def empresa_get_all(db: Session):
 
 
 def empleado_get_all(empresaID: str, db: Session):
-
-    
-
     query = """
-        SELECT e.codigo_empleado, 
+        SELECT e.id_empleado, e.codigo_empleado, 
             CONCAT(COALESCE(u.nombres, ''), ' ', COALESCE(u.apellidos, '')) as conductor, 
             e.fecha_registro 
         FROM empleado AS e
@@ -66,9 +63,10 @@ def empleado_get_all(empresaID: str, db: Session):
     
     dict_data = [
         {
-            "codigo_empleado": item[0],
-            "conductor": item[1],
-            "fecha_registro": item[2].strftime('%Y-%m-%d %H:%M:%S')  # Convertir datetime a cadena
+            "id_empleado": item[0],
+            "codigo_empleado": item[1],
+            "conductor": item[2],
+            "fecha_registro": item[3].strftime('%Y-%m-%d %H:%M:%S')  # Convertir datetime a cadena
         }
         for item in result
     ]

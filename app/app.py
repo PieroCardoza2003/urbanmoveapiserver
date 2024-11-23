@@ -1,8 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from routes import UsuarioRoutes, VehiculoRoutes, PingRoute, EmpresaRoute, ConductorRoute
 
-app = FastAPI()
+from fastapi.exceptions import RequestValidationError
+
+
+#app = FastAPI()
+app = FastAPI(debug=True)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"Error en la solicitud: {exc.errors()}")
+    return {"details": "error"}
+
 
 
 # Lista de orígenes permitidos
