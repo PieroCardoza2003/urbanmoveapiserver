@@ -78,8 +78,32 @@ def vehiculo_get_all(db: Session):
     return db.query(Vehiculo).all()
 
 
-def unidad_get_all(db: Session):
-    return db.query(Unidad).all()
+def unidad_get_all(empresaID: str, db: Session):
+    query = """
+        select u.id_unidad, u.numero as 
+         unidad, v.placa,
+         CONCAT(COALESCE(v.marca, ''), ' ', COALESCE(v.modelo, '')) as vehiculo,
+         t.nombre as tipo
+        FROM unidad as u
+            INNER JOIN vehiculo as v ON v.id_vehiculo = u.id_vehiculo
+            INNER JOIN transporte as t ON t.id_transporte = u.id_transporte
+        WHERE u.id_propietario = :empresaID;
+    """
+
+    result = db.execute(text(query), {'empresaID': empresaID}).fetchall()
+    
+    dict_data = [
+        {
+            "id_unidad": item[0],
+            "unidad": item[1],
+            "placa": item[2],
+            "vehiculo": item[3],
+            "tipo": item[4]
+        }
+        for item in result
+    ]
+
+    return dict_data
 
 
 def empleado_create(db: Session, empleado: EmpleadoCreate):

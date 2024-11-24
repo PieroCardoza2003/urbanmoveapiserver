@@ -24,8 +24,8 @@ def create_unidad(unidad: UnidadCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/all-unit")
-def get_all_unidad(db: Session = Depends(get_db)):
-    return unidad_get_all(db=db)
+def get_all_unidad(empresaID: str, db: Session = Depends(get_db)):
+    return unidad_get_all(empresaID=empresaID, db=db)
 
 @router.get("/all-vehicle")
 def get_all_vehicle(db: Session = Depends(get_db)):
