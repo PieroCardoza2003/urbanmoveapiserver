@@ -144,7 +144,7 @@ def unidad_create(db: Session, unidad: UnidadCreate):
 
         new_unidad = Unidad(
             id_propietario=unidad.id_propietario,
-            tipo_propietario=unidad.tipo_propietario,
+            tipo_propietario="E",
             numero=unidad.numero,
             id_vehiculo=new_vehicle.id_vehiculo,
             id_transporte=unidad.id_transporte

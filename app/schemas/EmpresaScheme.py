@@ -30,6 +30,5 @@ class UnidadCreate(BaseModel):
     modelo: str
     color: str
     id_propietario: UUID
-    tipo_propietario: str
     numero: int
     id_transporte: int
