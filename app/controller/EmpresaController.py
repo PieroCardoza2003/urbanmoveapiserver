@@ -2,6 +2,8 @@ from models.Empresa import Empresa
 from models.Empleado import Empleado
 from models.Vehiculo import Vehiculo
 from models.Unidad import Unidad
+from models.TarifaRuta import TarifaRuta
+from models.Ruta import Ruta
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import HTTPException
@@ -10,7 +12,72 @@ from utils.string_utils import is_blank
 from utils.email_utils import verify_email
 from utils.bcrypt_utils import encode_password, verify_password
 from utils.randomcode_utils import generar_codigo_unico
-from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate, EmpleadoResponse
+from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate, EmpleadoResponse, RutaCreate
+
+
+def route_create(db: Session, route: RutaCreate):
+
+    existing_empresa = db.query(Empresa).filter_by(id_empresa=route.id_empresa).first()
+
+    if not existing_empresa:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    try:
+        new_route = Ruta(
+            id_empresa = route.id_empresa,
+            letra_ruta = route.letra_ruta,
+            horario = route.horario,
+            id_transporte = route.id_transporte
+        )
+        db.add(new_route)
+        db.commit()
+        db.refresh(new_route)
+
+        tarifas = [
+            TarifaRuta(
+                id_ruta=new_route.id_ruta,
+                id_tarifa=tarifa.id_tarifa,
+                precio=tarifa.precio
+            )
+            for tarifa in route.tarifas
+        ]
+        db.add_all(tarifas)
+        db.commit()
+
+        return JSONResponse(content={
+            "details": "OK"
+        }, status_code=200)
+    except Exception as e:
+        print(e)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+def route_get_all(empresaID: str, db: Session):
+
+    query = """
+        select r.id_ruta, 
+            r.letra_ruta as 
+            ruta, r.horario, 
+            t.nombre as transporte  
+        FROM ruta as r
+        INNER JOIN transporte as t ON t.id_transporte = r.id_transporte
+        WHERE r.id_empresa = :empresaID;
+    """
+
+    result = db.execute(text(query), {'empresaID': empresaID}).fetchall()
+    
+    dict_data = [
+        {
+            "id_ruta": item[0],
+            "ruta": item[1],
+            "horario": item[2],
+            "transporte": item[3]
+        }
+        for item in result
+    ]
+
+    return dict_data
 
 
 def empresa_create(db: Session, empresa: EmpresaCreate):
@@ -40,6 +107,7 @@ def empresa_create(db: Session, empresa: EmpresaCreate):
         return new_empresa
     except Exception as e:
         print(e)
+        db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -126,6 +194,7 @@ def empleado_create(db: Session, empleado: EmpleadoCreate):
         return new_empleado
     except Exception as e:
         print(e)
+        db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

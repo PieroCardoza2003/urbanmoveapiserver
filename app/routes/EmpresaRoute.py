@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from middlewares.auth import verify_access_token
 from fastapi import HTTPException
 from database.db import get_db
-from controller.EmpresaController import empresa_create, empleado_create, empleado_get_all, empresa_get_all, empresa_login, unidad_create, unidad_get_all, vehiculo_get_all
-from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate
+from controller.EmpresaController import empresa_create, empleado_create, empleado_get_all, empresa_get_all, empresa_login, unidad_create, unidad_get_all, vehiculo_get_all, route_create, route_get_all
+from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate, RutaCreate
 
 
 router = APIRouter(prefix="/company")
@@ -18,10 +18,18 @@ def create_empleado(empleado: EmpleadoCreate, db: Session = Depends(get_db)):
     return empleado_create(db=db, empleado=empleado)
 
 
+@router.post("/register-route")
+def create_route(route: RutaCreate, db: Session = Depends(get_db)):
+    return route_create(db=db, route=route)
+
+@router.get("/all-route")
+def get_all_route(empresaID: str, db: Session = Depends(get_db)):
+    return route_get_all(empresaID=empresaID, db=db)
+
+
 @router.post("/register-unit")
 def create_unidad(unidad: UnidadCreate, db: Session = Depends(get_db)):
     return unidad_create(db=db, unidad=unidad)
-
 
 @router.get("/all-unit")
 def get_all_unidad(empresaID: str, db: Session = Depends(get_db)):

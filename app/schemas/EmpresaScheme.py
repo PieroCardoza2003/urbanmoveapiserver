@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from datetime import date, datetime
+from datetime import datetime
+from decimal import Decimal
+from typing import List
 from typing import Optional
 from uuid import UUID
 
@@ -32,3 +34,15 @@ class UnidadCreate(BaseModel):
     id_propietario: UUID
     numero: int
     id_transporte: int
+
+
+class Tarifa(BaseModel):
+    id_tarifa: int
+    precio: Decimal
+
+class RutaCreate(BaseModel):
+    id_empresa: UUID
+    letra_ruta: str
+    horario: str
+    id_transporte: int
+    tarifas: List[Tarifa]

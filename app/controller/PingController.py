@@ -18,6 +18,10 @@ from models.Vehiculo import Vehiculo
 from models.Transporte import Transporte
 from models.Unidad import Unidad
 
+from models.Ruta import Ruta
+from models.Tarifa import Tarifa
+from models.TarifaRuta import TarifaRuta
+
 
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
