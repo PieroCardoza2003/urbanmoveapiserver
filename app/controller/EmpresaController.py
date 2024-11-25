@@ -79,6 +79,50 @@ def route_get_all(empresaID: str, db: Session):
 
     return dict_data
 
+def route_passenger_get_all(db: Session):
+    query = """
+        select r.id_ruta, r.letra_ruta, e.razon_social as empresa, t.id_transporte ,t.nombre as tipo_transporte from ruta as r
+        INNER JOIN empresa as e ON e.id_empresa = r.id_empresa
+        INNER JOIN transporte as t ON t.id_transporte = r.id_transporte;
+    """
+    result = db.execute(text(query)).fetchall()
+    
+    dict_data = [
+        {
+            "id_ruta": item[0],
+            "letra_ruta": item[1],
+            "empresa": item[2],
+            "id_transporte": item[3],
+            "tipo_transporte": item[4]
+        }
+        for item in result
+    ]
+
+    return dict_data
+
+
+def route_driver_privado_get_all(db: Session):
+    query = """
+        select r.id_ruta, r.letra_ruta, e.razon_social as empresa, t.id_transporte ,t.nombre as tipo_transporte from ruta as r
+        INNER JOIN empresa as e ON e.id_empresa = r.id_empresa
+        INNER JOIN transporte as t ON t.id_transporte = r.id_transporte where t.id_transporte = 1;
+    """
+    result = db.execute(text(query)).fetchall()
+    
+    dict_data = [
+        {
+            "id_ruta": item[0],
+            "letra_ruta": item[1],
+            "empresa": item[2],
+            "id_transporte": item[3],
+            "tipo_transporte": item[4]
+        }
+        for item in result
+    ]
+
+    return dict_data
+
+
 
 def empresa_create(db: Session, empresa: EmpresaCreate):
 

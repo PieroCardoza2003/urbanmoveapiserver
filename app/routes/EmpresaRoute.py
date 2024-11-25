@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from middlewares.auth import verify_access_token
 from fastapi import HTTPException
 from database.db import get_db
-from controller.EmpresaController import empresa_create, empleado_create, empleado_get_all, empresa_get_all, empresa_login, unidad_create, unidad_get_all, vehiculo_get_all, route_create, route_get_all
+from controller.EmpresaController import empresa_create, empleado_create, empleado_get_all, empresa_get_all, empresa_login, unidad_create, unidad_get_all, vehiculo_get_all, route_create, route_get_all, route_passenger_get_all, route_driver_privado_get_all
 from schemas.EmpresaScheme import EmpresaCreate, EmpleadoCreate, EmpresaLogin, UnidadCreate, RutaCreate
 
 
@@ -25,6 +25,15 @@ def create_route(route: RutaCreate, db: Session = Depends(get_db)):
 @router.get("/all-route")
 def get_all_route(empresaID: str, db: Session = Depends(get_db)):
     return route_get_all(empresaID=empresaID, db=db)
+
+
+@router.get("/all-route-passenger")
+def get_all_route_passenger(db: Session = Depends(get_db)):
+    return route_passenger_get_all(db=db)
+
+@router.get("/all-route-driver-privado")
+def get_all_route_driver_privado(db: Session = Depends(get_db)):
+    return route_driver_privado_get_all(db=db)
 
 
 @router.post("/register-unit")
