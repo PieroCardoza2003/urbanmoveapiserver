@@ -6,14 +6,7 @@ from fastapi.exceptions import RequestValidationError
 
 
 #app = FastAPI()
-app = FastAPI(debug=True)
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f"Error en la solicitud: {exc.errors()}")
-    return {"details": "error"}
-
-
+app = FastAPI()
 
 # Lista de orígenes permitidos
 origins = [
